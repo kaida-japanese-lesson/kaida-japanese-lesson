@@ -47,14 +47,14 @@ body { font-family: sans-serif; background: #f9f9f9; color: #222; }
   <div class="voice-note" id="voiceNote"></div>
 </div>
 <script>
-const data = {
+var data = {
   greeting: { label: "挨拶", phrases: [
     { np: "नमस्ते", rom: "Namaste", jp: "こんにちは", jprom: "Konnichiwa" },
     { np: "सुप्रभात", rom: "Suprabhat", jp: "おはようございます", jprom: "Ohayou gozaimasu" },
     { np: "शुभ सन्ध्या", rom: "Shubha sandhya", jp: "こんばんは", jprom: "Konbanwa" },
     { np: "धन्यवाद", rom: "Dhanyabad", jp: "ありがとうございます", jprom: "Arigatou gozaimasu" },
     { np: "माफ गर्नुस्", rom: "Maaf garnos", jp: "すみません", jprom: "Sumimasen" },
-    { np: "फेरि भेटौँला", rom: "Pheri bhetaunla", jp: "またお会いしましょう", jprom: "Mata oai shimashou" },
+    { np: "फेरि भेटौँला", rom: "Pheri bhetaunla", jp: "またお会いしましょう", jprom: "Mata oai shimashou" }
   ]},
   work: { label: "職場", phrases: [
     { np: "मलाई मद्दत चाहिन्छ", rom: "Malai maddat chahinccha", jp: "助けてください", jprom: "Tasukete kudasai" },
@@ -64,7 +64,7 @@ const data = {
     { np: "काम सकियो", rom: "Kaam sakiyo", jp: "仕事が終わりました", jprom: "Shigoto ga owarimashita" },
     { np: "राम्रो काम!", rom: "Ramro kaam!", jp: "お疲れ様でした！", jprom: "Otsukaresama deshita!" },
     { np: "होसियार गर्नुस्", rom: "Hosiyar garnos", jp: "気をつけてください", jprom: "Ki wo tsukete kudasai" },
-    { np: "यहाँ राख्नुस्", rom: "Yahan rakhnos", jp: "ここに置いてください", jprom: "Koko ni oite kudasai" },
+    { np: "यहाँ राख्नुस्", rom: "Yahan rakhnos", jp: "ここに置いてください", jprom: "Koko ni oite kudasai" }
   ]},
   daily: { label: "日常", phrases: [
     { np: "खाना खानु भयो?", rom: "Khana khanu bhayo?", jp: "食事はしましたか？", jprom: "Shokuji wa shimashita ka?" },
@@ -72,7 +72,7 @@ const data = {
     { np: "शौचालय कहाँ छ?", rom: "Shauchalay kahan chha?", jp: "トイレはどこですか？", jprom: "Toire wa doko desu ka?" },
     { np: "कति पैसा?", rom: "Kati paisa?", jp: "いくらですか？", jprom: "Ikura desu ka?" },
     { np: "ठीक छ", rom: "Thik chha", jp: "大丈夫です", jprom: "Daijoubu desu" },
-    { np: "अलिकति", rom: "Alikati", jp: "少し", jprom: "Sukoshi" },
+    { np: "अलिकति", rom: "Alikati", jp: "少し", jprom: "Sukoshi" }
   ]},
   feelings: { label: "気持ち", phrases: [
     { np: "म ठिक छु", rom: "Ma thik chhu", jp: "元気です", jprom: "Genki desu" },
@@ -80,7 +80,7 @@ const data = {
     { np: "मलाई थकान लाग्यो", rom: "Malai thakaan lagyo", jp: "疲れました", jprom: "Tsukaremashita" },
     { np: "मलाई पेट दुखेको छ", rom: "Malai pet dukheko chha", jp: "おなかが痛いです", jprom: "Onaka ga itai desu" },
     { np: "मन परयो", rom: "Man paryo", jp: "気に入りました", jprom: "Ki ni irimashita" },
-    { np: "फिक्र नगर्नुस्", rom: "Phikir nagarnos", jp: "心配しないでください", jprom: "Shinpai shinaide kudasai" },
+    { np: "फिक्र नगर्नुस्", rom: "Phikir nagarnos", jp: "心配しないでください", jprom: "Shinpai shinaide kudasai" }
   ]},
   numbers: { label: "数字", phrases: [
     { np: "शून्य", rom: "Shunya", jp: "ゼロ", jprom: "Zero" },
@@ -95,63 +95,88 @@ const data = {
     { np: "नौ", rom: "Nau", jp: "きゅう・く（９）", jprom: "Kyuu / Ku" },
     { np: "दस", rom: "Das", jp: "じゅう（１０）", jprom: "Juu" },
     { np: "सय", rom: "Say", jp: "ひゃく（１００）", jprom: "Hyaku" },
-    { np: "हजार", rom: "Hajar", jp: "せん（１０００）", jprom: "Sen" },
+    { np: "हजार", rom: "Hajar", jp: "せん（１０００）", jprom: "Sen" }
   ]}
 };
 
-let currentCat = 'greeting';
-const synth = window.speechSynthesis;
-let voices = [];
+var currentCat = "greeting";
+var synth = window.speechSynthesis;
+var voices = [];
+
 function loadVoices() { voices = synth.getVoices(); }
 loadVoices();
-if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+if (synth.onvoiceschanged !== undefined) { synth.onvoiceschanged = loadVoices; }
+
 function getBestVoice(lang) {
-  const prefs = lang === 'ne' ? ['ne','ne-NP','hi','hi-IN'] : ['ja','ja-JP'];
-  for (const p of prefs) { const v = voices.find(v => v.lang.startsWith(p)); if (v) return v; }
+  var prefs = lang === "ne" ? ["ne","ne-NP","hi","hi-IN"] : ["ja","ja-JP"];
+  for (var i = 0; i < prefs.length; i++) {
+    var v = voices.find(function(v) { return v.lang.indexOf(prefs[i]) === 0; });
+    if (v) return v;
+  }
   return null;
 }
+
 function speak(text, lang, cellEl) {
   if (!synth) return;
   synth.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.lang = lang === 'ne' ? 'ne-NP' : 'ja-JP';
-  const voice = getBestVoice(lang);
+  var utt = new SpeechSynthesisUtterance(text);
+  utt.lang = lang === "ne" ? "ne-NP" : "ja-JP";
+  var voice = getBestVoice(lang);
   if (voice) utt.voice = voice;
   utt.rate = 0.85;
-  if (cellEl) { cellEl.classList.add('speaking'); utt.onend = () => cellEl.classList.remove('speaking'); utt.onerror = () => cellEl.classList.remove('speaking'); }
+  if (cellEl) {
+    cellEl.classList.add("speaking");
+    utt.onend = function() { cellEl.classList.remove("speaking"); };
+    utt.onerror = function() { cellEl.classList.remove("speaking"); };
+  }
   synth.speak(utt);
 }
+
 function setCategory(cat) {
   currentCat = cat;
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  var btns = document.querySelectorAll(".cat-btn");
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle("active", btns[i].getAttribute("data-cat") === cat);
+  }
   renderList();
 }
+
 function renderCategories() {
-  document.getElementById('catRow').innerHTML = Object.entries(data).map(([k,v]) =>
-    `<button class="cat-btn${k===currentCat?' active':''}" data-cat="${k}" onclick="setCategory('${k}')">${v.label}</button>`
-  ).join('');
+  var html = "";
+  var keys = Object.keys(data);
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    var active = k === currentCat ? " active" : "";
+    html += '<button class="cat-btn' + active + '" data-cat="' + k + '" onclick="setCategory(\'' + k + '\')">' + data[k].label + '</button>';
+  }
+  document.getElementById("catRow").innerHTML = html;
 }
+
 function renderList() {
-  const phrases = data[currentCat].phrases;
-  document.getElementById('phraseList').innerHTML = phrases.map(p => {
-    const safeNp = p.np.replace(/'/g,"\\'");
-    const safeJp = p.jp.replace(/'/g,"\\'");
-    return `<div class="phrase-row">
-      <div class="cell cell-np" onclick="speak('${safeNp}','ne',this)">
-        <div class="cell-main">${p.np}</div>
-        <div class="cell-sub">${p.rom}</div>
-      </div>
-      <div class="cell cell-jp" onclick="speak('${safeJp}','ja',this)">
-        <div class="cell-main">${p.jp}</div>
-        <div class="cell-sub">${p.jprom}</div>
-      </div>
-    </div>`;
-  }).join('');
-  const neVoice = getBestVoice('ne');
-  document.getElementById('voiceNote').textContent = neVoice ? '' : '※ ネパール語音声はブラウザによってヒンディー語に近い発音になる場合があります';
+  var phrases = data[currentCat].phrases;
+  var html = "";
+  for (var i = 0; i < phrases.length; i++) {
+    var p = phrases[i];
+    var safeNp = p.np.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    var safeJp = p.jp.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    html += '<div class="phrase-row">';
+    html += '<div class="cell cell-np" onclick="speak(\'' + safeNp + '\',\'ne\',this)">';
+    html += '<div class="cell-main">' + p.np + '</div>';
+    html += '<div class="cell-sub">' + p.rom + '</div>';
+    html += '</div>';
+    html += '<div class="cell cell-jp" onclick="speak(\'' + safeJp + '\',\'ja\',this)">';
+    html += '<div class="cell-main">' + p.jp + '</div>';
+    html += '<div class="cell-sub">' + p.jprom + '</div>';
+    html += '</div>';
+    html += '</div>';
+  }
+  document.getElementById("phraseList").innerHTML = html;
 }
-renderCategories();
-renderList();
+
+window.onload = function() {
+  renderCategories();
+  renderList();
+};
 </script>
 </body>
 </html>

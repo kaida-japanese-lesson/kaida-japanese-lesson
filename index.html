@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>नेपाली ↔ 日本語 練習アプリ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: sans-serif; background: #f9f9f9; color: #222; }
+.app { padding: 1rem; max-width: 560px; margin: 0 auto; }
+.header { text-align: center; margin-bottom: 1.5rem; padding-top: 1rem; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header p { font-size: 13px; color: #666; margin-top: 4px; }
+.category-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 1rem; scrollbar-width: none; }
+.category-row::-webkit-scrollbar { display: none; }
+.cat-btn { padding: 5px 14px; border-radius: 99px; border: 1px solid #ccc; background: #fff; font-size: 12px; white-space: nowrap; cursor: pointer; color: #555; }
+.cat-btn.active { background: #E1F5EE; border-color: #5DCAA5; color: #0F6E56; font-weight: 600; }
+.hint { text-align: center; font-size: 12px; color: #999; margin-bottom: 1rem; }
+.col-header { display: grid; grid-template-columns: 1fr 1fr; max-width: 500px; margin: 0 auto 6px; }
+.col-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; padding: 0 10px; }
+.phrase-list { max-width: 500px; margin: 0 auto; background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; overflow: hidden; }
+.phrase-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #f0f0f0; }
+.phrase-row:last-child { border-bottom: none; }
+.cell { padding: 14px 10px; cursor: pointer; transition: background 0.1s; }
+.cell:hover { background: #E1F5EE; }
+.cell.speaking { background: #E1F5EE; }
+.cell-np { border-right: 1px solid #f0f0f0; }
+.cell-main { font-size: 15px; font-weight: 600; color: #222; margin-bottom: 3px; }
+.cell-sub { font-size: 11px; color: #888; }
+.cell-jp .cell-main { font-size: 13px; }
+.voice-note { font-size: 11px; color: #aaa; text-align: center; margin-top: 1rem; padding-bottom: 1rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>🇳🇵 नेपाली ↔ 日本語 🇯🇵</h1>
+    <p>基礎フレーズ練習 / आधारभूत वाक्यांश अभ्यास</p>
+  </div>
+  <div class="category-row" id="catRow"></div>
+  <div class="hint">文字をクリックすると音声が流れます</div>
+  <div class="col-header">
+    <div class="col-label">🇳🇵 ネパール語</div>
+    <div class="col-label">🇯🇵 日本語</div>
+  </div>
+  <div class="phrase-list" id="phraseList"></div>
+  <div class="voice-note" id="voiceNote"></div>
+</div>
+<script>
+const data = {
+  greeting: { label: "挨拶", phrases: [
+    { np: "नमस्ते", rom: "Namaste", jp: "こんにちは", jprom: "Konnichiwa" },
+    { np: "सुप्रभात", rom: "Suprabhat", jp: "おはようございます", jprom: "Ohayou gozaimasu" },
+    { np: "शुभ सन्ध्या", rom: "Shubha sandhya", jp: "こんばんは", jprom: "Konbanwa" },
+    { np: "धन्यवाद", rom: "Dhanyabad", jp: "ありがとうございます", jprom: "Arigatou gozaimasu" },
+    { np: "माफ गर्नुस्", rom: "Maaf garnos", jp: "すみません", jprom: "Sumimasen" },
+    { np: "फेरि भेटौँला", rom: "Pheri bhetaunla", jp: "またお会いしましょう", jprom: "Mata oai shimashou" },
+  ]},
+  work: { label: "職場", phrases: [
+    { np: "मलाई मद्दत चाहिन्छ", rom: "Malai maddat chahinccha", jp: "助けてください", jprom: "Tasukete kudasai" },
+    { np: "मलाई थाहा छैन", rom: "Malai thaha chhaina", jp: "わかりません", jprom: "Wakarimasen" },
+    { np: "कृपया बिस्तारै बोल्नुस्", rom: "Kripaya bistari bolnos", jp: "ゆっくり話してください", jprom: "Yukkuri hanashite kudasai" },
+    { np: "यो कहाँ छ?", rom: "Yo kahan chha?", jp: "これはどこですか？", jprom: "Kore wa doko desu ka?" },
+    { np: "काम सकियो", rom: "Kaam sakiyo", jp: "仕事が終わりました", jprom: "Shigoto ga owarimashita" },
+    { np: "राम्रो काम!", rom: "Ramro kaam!", jp: "お疲れ様でした！", jprom: "Otsukaresama deshita!" },
+    { np: "होसियार गर्नुस्", rom: "Hosiyar garnos", jp: "気をつけてください", jprom: "Ki wo tsukete kudasai" },
+    { np: "यहाँ राख्नुस्", rom: "Yahan rakhnos", jp: "ここに置いてください", jprom: "Koko ni oite kudasai" },
+  ]},
+  daily: { label: "日常", phrases: [
+    { np: "खाना खानु भयो?", rom: "Khana khanu bhayo?", jp: "食事はしましたか？", jprom: "Shokuji wa shimashita ka?" },
+    { np: "पानी दिनुस्", rom: "Pani dinos", jp: "水をください", jprom: "Mizu wo kudasai" },
+    { np: "शौचालय कहाँ छ?", rom: "Shauchalay kahan chha?", jp: "トイレはどこですか？", jprom: "Toire wa doko desu ka?" },
+    { np: "कति पैसा?", rom: "Kati paisa?", jp: "いくらですか？", jprom: "Ikura desu ka?" },
+    { np: "ठीक छ", rom: "Thik chha", jp: "大丈夫です", jprom: "Daijoubu desu" },
+    { np: "अलिकति", rom: "Alikati", jp: "少し", jprom: "Sukoshi" },
+  ]},
+  feelings: { label: "気持ち", phrases: [
+    { np: "म ठिक छु", rom: "Ma thik chhu", jp: "元気です", jprom: "Genki desu" },
+    { np: "मलाई खुसी लाग्छ", rom: "Malai khusi lagcha", jp: "うれしいです", jprom: "Ureshii desu" },
+    { np: "मलाई थकान लाग्यो", rom: "Malai thakaan lagyo", jp: "疲れました", jprom: "Tsukaremashita" },
+    { np: "मलाई पेट दुखेको छ", rom: "Malai pet dukheko chha", jp: "おなかが痛いです", jprom: "Onaka ga itai desu" },
+    { np: "मन परयो", rom: "Man paryo", jp: "気に入りました", jprom: "Ki ni irimashita" },
+    { np: "फिक्र नगर्नुस्", rom: "Phikir nagarnos", jp: "心配しないでください", jprom: "Shinpai shinaide kudasai" },
+  ]},
+  numbers: { label: "数字", phrases: [
+    { np: "शून्य", rom: "Shunya", jp: "ゼロ", jprom: "Zero" },
+    { np: "एक", rom: "Ek", jp: "いち（１）", jprom: "Ichi" },
+    { np: "दुई", rom: "Dui", jp: "に（２）", jprom: "Ni" },
+    { np: "तीन", rom: "Tin", jp: "さん（３）", jprom: "San" },
+    { np: "चार", rom: "Char", jp: "し・よん（４）", jprom: "Shi / Yon" },
+    { np: "पाँच", rom: "Panch", jp: "ご（５）", jprom: "Go" },
+    { np: "छ", rom: "Chha", jp: "ろく（６）", jprom: "Roku" },
+    { np: "सात", rom: "Saat", jp: "なな・しち（７）", jprom: "Nana / Shichi" },
+    { np: "आठ", rom: "Aath", jp: "はち（８）", jprom: "Hachi" },
+    { np: "नौ", rom: "Nau", jp: "きゅう・く（９）", jprom: "Kyuu / Ku" },
+    { np: "दस", rom: "Das", jp: "じゅう（１０）", jprom: "Juu" },
+    { np: "सय", rom: "Say", jp: "ひゃく（１００）", jprom: "Hyaku" },
+    { np: "हजार", rom: "Hajar", jp: "せん（１０００）", jprom: "Sen" },
+  ]}
+};
+
+let currentCat = 'greeting';
+const synth = window.speechSynthesis;
+let voices = [];
+function loadVoices() { voices = synth.getVoices(); }
+loadVoices();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
+function getBestVoice(lang) {
+  const prefs = lang === 'ne' ? ['ne','ne-NP','hi','hi-IN'] : ['ja','ja-JP'];
+  for (const p of prefs) { const v = voices.find(v => v.lang.startsWith(p)); if (v) return v; }
+  return null;
+}
+function speak(text, lang, cellEl) {
+  if (!synth) return;
+  synth.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = lang === 'ne' ? 'ne-NP' : 'ja-JP';
+  const voice = getBestVoice(lang);
+  if (voice) utt.voice = voice;
+  utt.rate = 0.85;
+  if (cellEl) { cellEl.classList.add('speaking'); utt.onend = () => cellEl.classList.remove('speaking'); utt.onerror = () => cellEl.classList.remove('speaking'); }
+  synth.speak(utt);
+}
+function setCategory(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  renderList();
+}
+function renderCategories() {
+  document.getElementById('catRow').innerHTML = Object.entries(data).map(([k,v]) =>
+    `<button class="cat-btn${k===currentCat?' active':''}" data-cat="${k}" onclick="setCategory('${k}')">${v.label}</button>`
+  ).join('');
+}
+function renderList() {
+  const phrases = data[currentCat].phrases;
+  document.getElementById('phraseList').innerHTML = phrases.map(p => {
+    const safeNp = p.np.replace(/'/g,"\\'");
+    const safeJp = p.jp.replace(/'/g,"\\'");
+    return `<div class="phrase-row">
+      <div class="cell cell-np" onclick="speak('${safeNp}','ne',this)">
+        <div class="cell-main">${p.np}</div>
+        <div class="cell-sub">${p.rom}</div>
+      </div>
+      <div class="cell cell-jp" onclick="speak('${safeJp}','ja',this)">
+        <div class="cell-main">${p.jp}</div>
+        <div class="cell-sub">${p.jprom}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const neVoice = getBestVoice('ne');
+  document.getElementById('voiceNote').textContent = neVoice ? '' : '※ ネパール語音声はブラウザによってヒンディー語に近い発音になる場合があります';
+}
+renderCategories();
+renderList();
+</script>
+</body>
+</html>

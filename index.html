@@ -173,10 +173,21 @@ function renderList() {
   document.getElementById("phraseList").innerHTML = html;
 }
 
-window.onload = function() {
-  renderCategories();
-  renderList();
-};
+// Safari対応: DOMContentLoaded + window.onload の両方でフォールバック
+function init() {
+  if (document.getElementById("catRow") && document.getElementById("phraseList")) {
+    renderCategories();
+    renderList();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("load", init);
+
+// 即時実行フォールバック（DOMが既に準備済みの場合）
+if (document.readyState === "complete" || document.readyState === "interactive") {
+  setTimeout(init, 0);
+}
 </script>
 </body>
 </html>
